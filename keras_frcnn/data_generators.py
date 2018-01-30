@@ -240,8 +240,11 @@ def calc_rpn(C, img_data, width, height, resized_width, resized_height, img_leng
 	if len(neg_locs[0]) + num_pos > num_regions:
 		val_locs = random.sample(range(len(neg_locs[0])), len(neg_locs[0]) - num_pos)
 		y_is_box_valid[0, neg_locs[0][val_locs], neg_locs[1][val_locs], neg_locs[2][val_locs]] = 0
+		
 
-	y_rpn_cls = np.concatenate([y_is_box_valid, y_rpn_overlap], axis=1)
+	# calc_rpn()对每一个锚点的每一个anchor都是有输出的，其实有很多是不可用的，记录在y_is_box_valid里面。为了在计算loss时，
+	# 不计算这些不可用的anchor，因此在该函数输出时，将与输出等形状的y_is_box_valid拼接起来，计算loss时做一个对应元素的乘法，就可以舍去这些anchor产生的loss
+ 	y_rpn_cls = np.concatenate([y_is_box_valid, y_rpn_overlap], axis=1)
 	y_rpn_regr = np.concatenate([np.repeat(y_rpn_overlap, 4, axis=1), y_rpn_regr], axis=1)
 
 	return np.copy(y_rpn_cls), np.copy(y_rpn_regr)
